@@ -1,20 +1,20 @@
-let con;
+const cons = new Set();
 Deno.serve({
     port: 443,
-    cert: await Deno.readTextFile("/etc/letsencrypt/live/wab.sabae.cc/fullchain.pem"),
-    key: await Deno.readTextFile("/etc/letsencrypt/live/wab.sabae.cc/privkey.pem")
+    cert: await Deno.readTextFile("tls/server.crt"),
+    key: await Deno.readTextFile("tls/server.key")
 }, async (req) => {
     const upgrade = req.headers.get("upgrade") || "";
     if (upgrade.toLowerCase() == "websocket") {
         const { socket, response } = Deno.upgradeWebSocket(req);
         socket.onopen = () => {
-            if (con) {
+            cons.forEach((con) => {
                 con.send("hi");
-            }
-            con = socket;
+            });
+            cons.add(socket);
         };
         socket.onmessage = (e) => {
-            console.log(e.data);
+            console.log("e.data", e.data);
         }
         return response;
     } else {
